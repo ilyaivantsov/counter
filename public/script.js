@@ -17,8 +17,8 @@
             ws.close();
         }
 
-        // ws = new WebSocket(`ws://${location.host}`);
-        ws = new WebSocket(`ws://localhost:3001`);
+        ws = new WebSocket(`ws://${location.host}`);
+        // ws = new WebSocket(`ws://localhost:3001?a=o`);
         ws.onerror = function () {
             showMessage('WebSocket error');
         };

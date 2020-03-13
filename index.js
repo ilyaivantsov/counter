@@ -6,17 +6,16 @@ const http = require('http');
 const WebSocket = require('ws');
 
 const app = express();
-const map = new Map();
+const clients = new Set();
 
 
 app.use(express.static('public'));
 
 
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ port: 3001 });
+const wss = new WebSocket.Server({ noServer: true });
 
 server.on('upgrade', function (request, socket, head) {
-
 
     wss.handleUpgrade(request, socket, head, function (ws) {
         wss.emit('connection', ws, request);
@@ -24,21 +23,23 @@ server.on('upgrade', function (request, socket, head) {
 });
 
 wss.on('connection', function (ws, request) {
-    const userId = request.connection.remoteAddress;
+    // const userId = request.connection.remoteAddress;
+    // console.log(request.url);
 
-    map.set(userId, ws);
+    clients.add(ws);
 
     ws.on('message', function (message) {
-        wss.clients.forEach(function each(client) {
+        console.log(clients.size);
+        clients.forEach(function each(client) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
                 client.send(message);
             }
         });
-        console.log(`Message ${message} from ${userId}`);
+        console.log(`Message ${message} from someone`);
     });
 
     ws.on('close', function () {
-        map.delete(userId);
+        clients.delete(ws);
     });
 });
 
