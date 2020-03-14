@@ -2,6 +2,7 @@
 
 const express = require('express');
 const http = require('http');
+const fs = require("fs");
 
 const WebSocket = require('ws');
 
@@ -11,7 +12,9 @@ const clients = new Set();
 
 app.use(express.static('public'));
 
-let count = 0;
+
+let data = fs.readFileSync("count.txt", "utf8");
+let count = +data;
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ noServer: true });
@@ -24,8 +27,6 @@ server.on('upgrade', function (request, socket, head) {
 });
 
 wss.on('connection', function (ws, request) {
-    // const userId = request.connection.remoteAddress;
-    // console.log(request.url);
 
     clients.add(ws);
     ws.send(count);
@@ -39,8 +40,8 @@ wss.on('connection', function (ws, request) {
                 client.send(count);
             }
         });
-        
-        console.log(`Message ${message} from someone`);
+
+        console.log(`Message ${message}`);
     });
 
     ws.on('close', function () {
@@ -48,6 +49,18 @@ wss.on('connection', function (ws, request) {
     });
 });
 
+setInterval(function () {
+    fs.readFile("count.txt", "utf8",
+        function (error, data) {
+            if (error) throw error;
+            count = +data;
+            clients.forEach(function each(client) {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(count);
+                }
+            });
+        });
+}, 60000);
 
 server.listen(3000, function () {
     console.log('Go to http://localhost:3000');
