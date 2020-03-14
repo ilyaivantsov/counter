@@ -1,6 +1,8 @@
 ## Installing
 
 ```
+git clone https://github.com/ilyaivantsov/counter.git
+cd counter
 npm install
 ```
 
