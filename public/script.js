@@ -1,46 +1,48 @@
 (function () {
-    const messages = document.querySelector('#messages');
-    const wsButton = document.querySelector('#wsButton');
-    const wsSendButton = document.querySelector('#wsSendButton');
-
-
-    function showMessage(message) {
-        messages.textContent += `\n${message}`;
-        messages.scrollTop = messages.scrollHeight;
-    }
+    const counter = $('#counter');
+    const increment = $('#increment');
 
     let ws;
+    let socket;
+    let interval;
 
-    wsButton.onclick = function () {
-        if (ws) {
-            ws.onerror = ws.onopen = ws.onclose = null;
-            ws.close();
-        }
-
+    function start() {
+        clearInterval(interval);
         ws = new WebSocket(`ws://${location.host}`);
-        // ws = new WebSocket(`ws://localhost:3001?a=o`);
+
         ws.onerror = function () {
-            showMessage('WebSocket error');
+            counter.text('WebSocket error');
         };
-        ws.onopen = function () {
-            showMessage('WebSocket connection established');
+        ws.onopen = function (event) {
+            sockets = true;
+            if (!+event.data) return;
+            counter.text(`${event.data}`);
         };
         ws.onclose = function () {
-            showMessage('WebSocket connection closed');
+            sockets = false;
+            counter.text('WebSocket connection closed');
             ws = null;
         };
         ws.onmessage = function (event) {
-            showMessage(`${event.data}`);
+            counter.text(`${event.data}`);
         }
-    };
 
-    wsSendButton.onclick = function () {
+        interval = setInterval(function () {
+            if (!socket) {
+                start();
+            }
+        }, 5000)
+    }
+
+    increment.click(function () {
         if (!ws) {
-            showMessage('No WebSocket connection');
+            counter.text('No WebSocket connection');
             return;
         }
+        let newVal = +$('#counter').text() + 1;
+        counter.text(`${newVal}`);
+        ws.send(`${newVal}`);
+    });
 
-        ws.send('Hello World!');
-        showMessage('Sent "Hello World!"');
-    };
+    start();
 })();

@@ -11,6 +11,7 @@ const clients = new Set();
 
 app.use(express.static('public'));
 
+let count = 0;
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ noServer: true });
@@ -27,14 +28,18 @@ wss.on('connection', function (ws, request) {
     // console.log(request.url);
 
     clients.add(ws);
+    ws.send(count);
 
     ws.on('message', function (message) {
-        console.log(clients.size);
+        count++;
+        console.log(count);
+
         clients.forEach(function each(client) {
             if (client !== ws && client.readyState === WebSocket.OPEN) {
-                client.send(message);
+                client.send(count);
             }
         });
+        
         console.log(`Message ${message} from someone`);
     });
 
